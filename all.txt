@@ -1,0 +1,298 @@
+#Bfs
+
+import networkx as nx
+from collections import deque
+import matplotlib.pyplot as plt
+
+E = []
+print("Edges (A B), 'done' to stop:")
+while (e := input("> ")) != "done":
+    a, b = e.split()
+    E.append((a, b))
+
+G = nx.Graph()
+G.add_edges_from(E)
+s, g = input("Start: "), input("Goal: ")
+
+Q, vis = deque([[s]]), set()
+while Q:
+    p = Q.popleft(); n = p[-1]
+    if n == g: break
+    if n not in vis:
+        vis.add(n)
+        for nb in G[n]:
+            Q.append(p + [nb])
+else:
+    p = None
+
+if p: print("Path:", "->".join(p))
+else: print("No path")
+
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_color='lightblue')
+if p:
+    nx.draw_networkx_nodes(G, pos, nodelist=p, node_color='orange')
+    nx.draw_networkx_edges(G, pos, edgelist=list(zip(p, p[1:])), edge_color='red')
+plt.show()
+
+
+
+
+
+
+
+ #dfs
+import networkx as nx
+from collections import deque
+import matplotlib.pyplot as plt
+
+E = []
+print("Edges (A B), 'done' to stop:")
+while (e := input("> ")) != "done":
+    a, b = e.split()
+    E.append((a, b))
+
+G = nx.Graph()
+G.add_edges_from(E)
+
+s, g = input("Start: "), input("Goal: ")
+
+stack, vis = [[s]], set()
+while stack:
+    p = stack.pop()
+    n = p[-1]
+    if n == g:
+        break
+    if n not in vis:
+        vis.add(n)
+        for nb in reversed(list(G[n])):
+            stack.append(p + [nb])
+else:
+    p = None
+
+if p:
+    print("Path:", "->".join(p))
+else:
+    print("No path found")
+
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_color='lightblue')
+
+if p:
+    nx.draw_networkx_nodes(G, pos, nodelist=p, node_color='orange')
+    nx.draw_networkx_edges(G, pos, edgelist=list(zip(p, p[1:])), edge_color='red')
+
+plt.show()
+
+
+
+#GBFS
+import networkx as nx
+import matplotlib.pyplot as plt
+import heapq
+
+# --- Input edges ---
+G = nx.Graph()
+print("Enter edges (A B cost). Type 'done' when finished:")
+while True:
+    e = input("> ").strip()
+    if e.lower() == 'done': break
+    a, b, w = e.split()
+    G.add_edge(a.upper(), b.upper(), weight=float(w))
+
+# --- Get start and goal FIRST ---
+start = input("\nStart: ").strip().upper()
+goal  = input("Goal:  ").strip().upper()
+
+# --- Input heuristic values (now we know the goal) ---
+h = {}
+print(f"\nEnter heuristic values (estimated cost from node {start} to goal {goal}). Type 'done' when finished:")
+while True:
+    x = input("> ").strip()
+    if x.lower() == 'done': break
+    n, val = x.split()
+    h[n.upper()] = float(val)
+
+# --- Greedy Best-First Search ---
+pq = [(h.get(start, float('inf')), [start])]
+visited = set()
+path = None
+
+while pq:
+    _, p = heapq.heappop(pq)
+    n = p[-1]
+    if n == goal:
+        path = p
+        break
+    if n not in visited:
+        visited.add(n)
+        for nb in G[n]:
+            if nb not in visited:
+                heapq.heappush(pq, (h.get(nb, float('inf')), p + [nb]))
+
+# --- Calculate path cost ---
+path_cost = 0
+if path:
+    for i in range(len(path) - 1):
+        path_cost += G[path[i]][path[i+1]]['weight']
+
+# --- Print result with path cost ---
+if path:
+    print(f"\nPath found: {' -> '.join(path)}")
+    print(f"Path cost: {path_cost}")
+    print(f"Heuristic cost (h({start})): {h.get(start, 'N/A')}")
+else:
+    print("\nNo path found.")
+
+# --- Draw graph ---
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=800)
+nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
+
+if path:
+    nx.draw_networkx_nodes(G, pos, nodelist=path, node_color='orange', node_size=900)
+    nx.draw_networkx_edges(G, pos, edgelist=list(zip(path, path[1:])), edge_color='red', width=3)
+
+plt.title("Greedy Best-First Search (f(n) = h(n))")
+plt.axis('off')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#A*
+import networkx as nx
+import matplotlib.pyplot as plt
+import heapq
+
+# --- Input edges ---
+G = nx.Graph()
+print("Enter edges (A B cost). Type 'done' when finished:")
+while True:
+    e = input("> ").strip()
+    if e.lower() == 'done': break
+    a, b, w = e.split()
+    G.add_edge(a.upper(), b.upper(), weight=float(w))
+
+# --- Get start and goal FIRST ---
+start = input("\nStart: ").strip().upper()
+goal = input("Goal:  ").strip().upper()
+
+# --- Input heuristic values (now we know the goal) ---
+h = {}
+print(f"\nEnter heuristic values (estimated cost from node to goal {goal}). Type 'done' when finished:")
+while True:
+    x = input("> ").strip()
+    if x.lower() == 'done': break
+    n, val = x.split()
+    h[n.upper()] = float(val)
+
+# --- A* Search ---
+pq = [(h.get(start, float('inf')), 0, [start])]  # (f, g, path)
+visited = set()
+path = None
+path_cost = 0
+
+while pq:
+    f, g, p = heapq.heappop(pq)
+    n = p[-1]
+    if n == goal:
+        path = p
+        path_cost = g  # g contains the actual path cost
+        break
+    if n not in visited:
+        visited.add(n)
+        for nb in G[n]:
+            if nb not in visited:
+                cost = g + G[n][nb]['weight']
+                fn = cost + h.get(nb, float('inf'))
+                heapq.heappush(pq, (fn, cost, p + [nb]))
+
+# --- Print result with start and goal first ---
+print(f"\nStart node: {start}")
+print(f"Goal node: {goal}")
+print(f"\nHeuristic values:")
+for node, value in h.items():
+    print(f"  h({node}) = {value}")
+
+if path:
+    print(f"\nPath found: {' -> '.join(path)}")
+    print(f"Path cost: {path_cost}")
+else:
+    print("\nNo path found.")
+
+# --- Draw graph ---
+pos = nx.spring_layout(G)
+nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=800)
+nx.draw_networkx_edge_labels(G, pos, edge_labels=nx.get_edge_attributes(G, 'weight'))
+
+if path:
+    nx.draw_networkx_nodes(G, pos, nodelist=path, node_color='orange', node_size=900)
+    nx.draw_networkx_edges(G, pos, edgelist=list(zip(path, path[1:])), edge_color='red', width=3)
+
+plt.title("A* Search (f(n) = g(n) + h(n))")
+plt.axis('off')
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Genetic
+import random
+
+#random.seed(0)
+
+def fit(x):
+    return x**2
+
+pop = [random.randint(0, 31) for i in range(6)]
+
+for i in range(10):
+    pop.sort(key=fit, reverse=True)
+    p1, p2 = pop[0], pop[1]
+    child = (p1 + p2) // 2
+    if random.random() < 0.3:
+        child ^= 1
+    pop[-1] = child
+
+best = max(pop, key=fit)
+print("Best:", best, "Fitness:", fit(best))
+
+
+
+
+
+
+Gradient
+
+# Gradient Descent for f(x) = x^2
+
+x = 5       # starting value
+lr = 0.1    # learning rate
+steps = 20
+
+for i in range(steps):
+    x = x - lr * 2 * x
+    print(f"Step {i+1}: x = {round(x,4)}, f(x) = {round(x**2,4)}")
+
+print(f"\nApproximate minimum at x = {round(x,4)}, f(x) = {round(x**2,4)}")
